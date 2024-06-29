@@ -1,4 +1,5 @@
 from collections import deque
+
 import numpy as np
 
 from CampusEnv import CampusEnv
@@ -6,7 +7,7 @@ from typing import List, Tuple
 import heapdict
 
 
-class Node():
+class Node:
     def __init__(self, state, cost: int = 0, action: int = 0, is_terminated: bool = False, parent: Node = None) -> None:
         self.state = state
         self.cost = cost
@@ -14,7 +15,7 @@ class Node():
         self.is_terminated = is_terminated
         self.parent = parent
 
-class Agent():
+class Agent:
     def __init__(self) -> None:
         self.env: CampusEnv = None
         self.OPEN = None
@@ -42,14 +43,13 @@ class Agent():
 
         return (actions, total_cost, self.expanded)
 
-    @abstractclassmethod
     def search(self, env: CampusEnv) -> Tuple[List[int], float, int]:
-        pass
+        raise NotImplementedError 
 
 
 class DFSGAgent(Agent):
     def __init__(self) -> None:
-        super.__init__()
+        super().__init__()
 
     def search(self, env: CampusEnv) -> Tuple[List[int], float, int]:
         self.env = env
