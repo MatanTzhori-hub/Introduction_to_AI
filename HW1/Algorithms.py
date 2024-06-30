@@ -140,21 +140,61 @@ class UCSAgent(Agent):
 
 
 
-class WeightedAStarAgent():
+class WeightedAStarAgent(Agent):
     
     def __init__(self):
-        raise NotImplementedError
+        super().__init__()
+    
+    def __reset_agent__(self, env: CampusEnv) -> None:
+        super().__reset_agent__(env)
+        self.OPEN: heapdict = heapdict.heapdict()
 
+    def h_campus(self, state: int) -> int:
+        goal_states = self.env.get_goal_states()
+        manhatan_dist = np.array([np.sum(np.abs(np.array(self.env.to_row_col(state)) - np.array(self.env.to_row_col(goal)))) for goal in goal_states])
+        return np.min([np.min(manhatan_dist), 100]).item()
+    
     def search(self, env: CampusEnv, h_weight) -> Tuple[List[int], float, int]:
-        raise NotImplementedError   
+        self.__reset_agent__(env)
+
+        first_node = Node(env.get_initial_state())
+        self.state_to_node[first_node.state] = first_node
+        f = (1 - h_weight) * first_node.g + h_weight * self.h_campus(first_node.state)
+        self.OPEN[first_node.state] = (f, first_node.state)
+        
+        while self.OPEN:
+            cur_state, _ = self.OPEN.popitem()
+            cur_node = self.state_to_node[cur_state]
+            self.CLOSE.add(cur_node.state)
+            
+            if self.env.is_final_state(cur_node.state):
+                return self.solution(cur_node)
+            
+            for child in self.expand(cur_node):
+                child_state = child.state
+                new_g = cur_node.g + child.cost
+                new_f = (1 - h_weight) * new_g + h_weight * self.h_campus(child_state)
+                
+                # if self.env.is_final_state(child_state):
+                #     return self.solution(child)
+                
+                if child_state not in self.CLOSE and child_state not in self.OPEN.keys():
+                    child.g = new_g
+                    self.OPEN[child_state] = (new_f, child.state)
+                elif child_state in self.OPEN.keys() and self.OPEN[child_state][0] > new_g:
+                    child.g = new_g
+                    child.parent = cur_node
+                    self.OPEN[child_state] = (new_f, child.state)
+                    
+        return None 
 
 
 
-class AStarAgent():
+class AStarAgent(WeightedAStarAgent):
     
     def __init__(self):
-        raise NotImplementedError
+        super().__init__()
 
     def search(self, env: CampusEnv) -> Tuple[List[int], float, int]:
-        raise NotImplementedError 
+        return super().search(env, 0.5)
 
