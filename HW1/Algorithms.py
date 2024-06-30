@@ -8,40 +8,54 @@ import heapdict
 
 
 class Node:
-    def __init__(self, state, cost: int = 0, action: int = 0, is_terminated: bool = False, parent: Node = None) -> None:
+    def __init__(self, state, cost: int = 0, action: int = 0, is_terminated: bool = False, parent = None) -> None:
         self.state = state
         self.cost = cost
         self.action = action
         self.is_terminated = is_terminated
         self.parent = parent
+        self.g = 0
 
 class Agent:
     def __init__(self) -> None:
         self.env: CampusEnv = None
         self.OPEN = None
+        self.state_to_node: dict = dict()
         self.CLOSE: set = set()
         self.expanded: int = 0
 
     def expand(self, node: Node):
         self.expanded = self.expanded + 1
         
-        for action, (state, cost, terminated) in self.env.succ(node.state).items(): 
-            child = Node(state, cost, action, terminated, node)
-            yield child
+        for action, (state, cost, terminated) in self.env.succ(node.state).items():
+            if state is None:
+                continue 
+            if state not in self.state_to_node.keys():
+                child = Node(state, cost, action, terminated, node)
+                self.state_to_node[state] = child
+                yield child
+            else:
+                yield self.state_to_node[state]
 
     def solution(self, node: Node) -> Tuple[List[int], float, int]:
-        if node is None or node.parent is None:
-            return None
-
         total_cost = 0
         actions = []
 
-        while node is not None:
+        while node.parent is not None:
             total_cost += node.cost
-            actions = node.action + actions
+            actions.insert(0, node.action)
             node = node.parent
 
         return (actions, total_cost, self.expanded)
+    
+    def __reset_agent__(self, env: CampusEnv) -> None:
+        self.env: CampusEnv = env
+        self.env.reset()
+        self.OPEN = None
+        self.state_to_node: dict = dict()
+        self.CLOSE: set = set()
+        self.expanded: int = 0
+        
 
     def search(self, env: CampusEnv) -> Tuple[List[int], float, int]:
         raise NotImplementedError 
@@ -50,15 +64,18 @@ class Agent:
 class DFSGAgent(Agent):
     def __init__(self) -> None:
         super().__init__()
-
-    def search(self, env: CampusEnv) -> Tuple[List[int], float, int]:
-        self.env = env
-        self.env.reset()
+        
+    def __reset_agent__(self, env: CampusEnv) -> None:
+        super().__reset_agent__(env)
         self.OPEN: deque = deque()
 
+    def search(self, env: CampusEnv) -> Tuple[List[int], float, int]:
+        self.__reset_agent__(env)
+
         first_node = Node(env.get_initial_state())
+        self.state_to_node[first_node.state] = first_node
         self.OPEN.append(first_node)
-        return self.recursive_DFS_G(first_node)
+        return self.recursive_DFS_G()
 
 
     def recursive_DFS_G(self):
@@ -69,9 +86,9 @@ class DFSGAgent(Agent):
             return self.solution(cur_node)
 
         for child in self.expand(cur_node):
-            if child.state not in self.CLOSE and child not in self.OPEN:
+            if child.state not in self.CLOSE and child.state not in [s.state for s in self.OPEN]:
                 self.OPEN.append(child)
-                result = recursive_DFS_G()
+                result = self.recursive_DFS_G()
                 if result is not None:
                     return result
         
@@ -79,13 +96,43 @@ class DFSGAgent(Agent):
         
 
 
-class UCSAgent():
+class UCSAgent(Agent):
   
     def __init__(self) -> None:
-        raise NotImplementedError
+        super().__init__()
+    
+    def __reset_agent__(self, env: CampusEnv) -> None:
+        super().__reset_agent__(env)
+        self.OPEN: heapdict = heapdict.heapdict()
 
     def search(self, env: CampusEnv) -> Tuple[List[int], float, int]:
-        raise NotImplementedError
+        self.__reset_agent__(env)
+
+        first_node = Node(env.get_initial_state())
+        self.state_to_node[first_node.state] = first_node
+        self.OPEN[first_node.state] = (first_node.g, first_node.state)
+        
+        while self.OPEN:
+            cur_state, _ = self.OPEN.popitem()
+            cur_node = self.state_to_node[cur_state]
+            self.CLOSE.add(cur_node.state)
+            
+            if self.env.is_final_state(cur_node.state):
+                return self.solution(cur_node)
+            
+            for child in self.expand(cur_node):
+                child_state = child.state
+                new_g = cur_node.g + child.cost
+                
+                if child_state not in self.CLOSE and child_state not in self.OPEN.keys():
+                    child.g = new_g
+                    self.OPEN[child_state] = (child.g, child.state)
+                elif child_state in self.OPEN.keys() and self.OPEN[child_state][0] > new_g:
+                    child.g = new_g
+                    self.OPEN[child_state] = (child.g, child.state)
+                    
+        return None
+            
 
 
 
