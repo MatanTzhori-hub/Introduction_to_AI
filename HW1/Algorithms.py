@@ -124,11 +124,15 @@ class UCSAgent(Agent):
                 child_state = child.state
                 new_g = cur_node.g + child.cost
                 
+                # if self.env.is_final_state(child_state):
+                #     return self.solution(child)
+                
                 if child_state not in self.CLOSE and child_state not in self.OPEN.keys():
                     child.g = new_g
                     self.OPEN[child_state] = (child.g, child.state)
                 elif child_state in self.OPEN.keys() and self.OPEN[child_state][0] > new_g:
                     child.g = new_g
+                    child.parent = cur_node
                     self.OPEN[child_state] = (child.g, child.state)
                     
         return None
