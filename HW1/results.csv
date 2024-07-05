@@ -1,0 +1,7 @@
+map,DFS-G cost,DFS-G num of expanded nodes,UCS cost,UCS  num of expanded nodes,A* cost,A*  num of expanded nodes,W-A* (0.3) cost,W-A* (0.3) num of expanded nodes,W-A* (0.7) cost,W-A* (0.7) num of expanded nodes,W-A* (0.9) cost,W-A* (0.9) num of expanded nodes
+,,,,,,,,,,,,
+map12x12,121,33,87,97,87,90,87,94,89,81,89,26
+,,,,,,,,,,,,
+map15x15,181,47,106,167,106,167,106,167,106,147,129,42
+,,,,,,,,,,,,
+map20x20,282,57,175,309,175,308,175,308,175,297,202,54
