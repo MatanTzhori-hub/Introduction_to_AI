@@ -124,9 +124,6 @@ class UCSAgent(Agent):
                 child_state = child.state
                 new_g = cur_node.g + child.cost
                 
-                # if self.env.is_final_state(child_state):
-                #     return self.solution(child)
-                
                 if child_state not in self.CLOSE and child_state not in self.OPEN.keys():
                     child.g = new_g
                     self.OPEN[child_state] = (child.g, child.state)
@@ -174,9 +171,6 @@ class WeightedAStarAgent(Agent):
                 child_state = child.state
                 new_g = cur_node.g + child.cost
                 new_f = (1 - h_weight) * new_g + h_weight * self.h_campus(child_state)
-                
-                # if self.env.is_final_state(child_state):
-                #     return self.solution(child)
                 
                 if child_state not in self.CLOSE and child_state not in self.OPEN.keys():
                     child.g = new_g
