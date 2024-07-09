@@ -28,14 +28,13 @@ class Agent:
         self.expanded = self.expanded + 1
         
         for action, (state, cost, terminated) in self.env.succ(node.state).items():
+            if state == node.state:
+                continue
             if state is None:
                 continue 
-            if state not in self.state_to_node.keys():
-                child = Node(state, cost, action, terminated, node)
-                self.state_to_node[state] = child
-                yield child
-            else:
-                yield self.state_to_node[state]
+            
+            child = Node(state, cost, action, terminated, node)
+            yield child
 
     def solution(self, node: Node) -> Tuple[List[int], float, int]:
         total_cost = 0
@@ -127,10 +126,12 @@ class UCSAgent(Agent):
                 if child_state not in self.CLOSE and child_state not in self.OPEN.keys():
                     child.g = new_g
                     self.OPEN[child_state] = (child.g, child.state)
-                elif child_state in self.OPEN.keys() and self.OPEN[child_state][0] > new_g:
+                    self.state_to_node[child_state] = child
+                elif child_state in self.OPEN.keys() and child.g > new_g:
                     child.g = new_g
                     child.parent = cur_node
                     self.OPEN[child_state] = (child.g, child.state)
+                    self.state_to_node[child_state] = child
                     
         return None
             
@@ -174,11 +175,20 @@ class WeightedAStarAgent(Agent):
                 
                 if child_state not in self.CLOSE and child_state not in self.OPEN.keys():
                     child.g = new_g
-                    self.OPEN[child_state] = (new_f, child.state)
-                elif child_state in self.OPEN.keys() and self.OPEN[child_state][0] > new_g:
+                    self.OPEN[child_state] = (new_f, child_state)
+                    self.state_to_node[child_state] = child
+                elif child_state in self.OPEN.keys() and child.g > new_g:
                     child.g = new_g
                     child.parent = cur_node
                     self.OPEN[child_state] = (new_f, child.state)
+                    self.state_to_node[child_state] = child
+                else: 
+                    if(child.g > new_g):
+                        child.g = new_g
+                        child.parent = cur_node
+                        self.CLOSE.remove(child_state)
+                        self.OPEN[child_state] = (new_f, child.state)
+                        self.state_to_node[child_state] = child
                     
         return None 
 
