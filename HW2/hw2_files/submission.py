@@ -5,6 +5,7 @@ import random
 
 # Matan added
 import numpy as np
+from func_timeout import func_timeout, FunctionTimedOut
 import time
 
 # TODO: section a : 3
@@ -49,64 +50,6 @@ def smart_heuristic(env: WarehouseEnv, robot_id: int):
     if robot.package != None:
         return DistHeur(robot_id, robot.package.destination) + robot.credit - other_robot.credit + 1.1*robot.battery + pack_reward(robot.package)
     return PackHeur(robot_id) + (1+1/env.num_steps)*robot.credit - other_robot.credit + 1.1*robot.battery
-    
-
-def RB_Minimax(env: WarehouseEnv, robot: int, time_limit: float):
-    
-    def RB_Minimax_recursive(state: WarehouseEnv, robot_id: int, cur_depth: int, depth: int):
-        
-        if state.done() or cur_depth == depth:
-            return state.robots[robot_id].credit - state.robots[(robot_id+1)%2].credit, 'park'
-        
-        turn_robot = (robot_id + cur_depth)%2
-        
-        operators = state.get_legal_operators(turn_robot)
-        children = [state.clone() for _ in operators]
-        for child, op in zip(children, operators):
-            child.apply_operator(turn_robot, op)
-            
-        if robot_id == turn_robot:
-            cur_max = -np.inf
-            
-            out_vals = []
-            for chile_state in children:
-                val, op = RB_Minimax_recursive(chile_state, robot_id, cur_depth+1, depth)
-                out_vals.append(val)
-            
-            out_vals.append(cur_max)
-            cur_max = max(out_vals)
-            op = operators[np.argmax(out_vals)]
-            
-            return cur_max, op
-            
-        else: #robot_id != turn_robot
-            cur_min = np.inf
-            
-            out_vals = []
-            for chile_state in children:
-                val, op = RB_Minimax_recursive(chile_state, robot_id, cur_depth+1, depth)
-                out_vals.append(val)
-            
-            out_vals.append(cur_min)
-            cur_min = min(out_vals)
-            op = operators[np.argmin(out_vals)]
-            
-            return cur_min, op
-    
-    
-    cur_max = -np.inf
-    op = 'park'
-    start = time.time()
-    D = 5
-    while True:
-        out_val, out_op = RB_Minimax_recursive(env.clone(), robot, 0, D)
-        cur_max , op = (out_val, out_op) if out_val > cur_max else (cur_max , op)
-        
-        end = time.time()
-        if end - start > time_limit * 0.5:
-            return cur_max , op
-        
-        D = D + 1
         
     
 
@@ -117,9 +60,65 @@ class AgentGreedyImproved(AgentGreedy):
 
 class AgentMinimax(Agent):
     # TODO: section b : 1
+    def __init__(self) -> None:
+        super().__init__()
+        self.cur_max = -np.inf
+        self.op = 'park'
+    
     def run_step(self, env: WarehouseEnv, agent_id, time_limit):
-        max_val, op = RB_Minimax(env, agent_id, time_limit)
-        return op
+        try:
+            func_timeout(time_limit*0.8, self.RB_Minimax, (env.clone(), agent_id, time_limit))
+        except FunctionTimedOut:
+            return self.op
+    
+    def RB_Minimax(self, env: WarehouseEnv, robot: int, time_limit: float):
+    
+        def RB_Minimax_recursive(state: WarehouseEnv, robot_id: int, cur_depth: int, depth: int):
+            
+            if state.done() or cur_depth == depth:
+                return state.robots[robot_id].credit - state.robots[(robot_id+1)%2].credit, 'park'
+            
+            turn_robot = (robot_id + cur_depth)%2
+            
+            operators = state.get_legal_operators(turn_robot)
+            children = [state.clone() for _ in operators]
+            for child, op in zip(children, operators):
+                child.apply_operator(turn_robot, op)
+                
+            if robot_id == turn_robot:
+                cur_max = -np.inf
+                
+                out_vals = []
+                for chile_state in children:
+                    val, op = RB_Minimax_recursive(chile_state, robot_id, cur_depth+1, depth)
+                    out_vals.append(val)
+                
+                out_vals.append(cur_max)
+                cur_max = max(out_vals)
+                op = operators[np.argmax(out_vals)]
+                
+                return cur_max, op
+                
+            else: #robot_id != turn_robot
+                cur_min = np.inf
+                
+                out_vals = []
+                for chile_state in children:
+                    val, op = RB_Minimax_recursive(chile_state, robot_id, cur_depth+1, depth)
+                    out_vals.append(val)
+                
+                out_vals.append(cur_min)
+                cur_min = min(out_vals)
+                op = operators[np.argmin(out_vals)]
+                
+                return cur_min, op
+        
+        D = 10
+        while True:
+            out_val, out_op = RB_Minimax_recursive(env.clone(), robot, 0, D)
+            self.cur_max , self.op = (out_val, out_op) if out_val > self.cur_max else (self.cur_max , self.op)
+            
+            D = D + 1
 
 
 class AgentAlphaBeta(Agent):
