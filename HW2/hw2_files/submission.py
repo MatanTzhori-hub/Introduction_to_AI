@@ -44,8 +44,8 @@ def smart_heuristic(env: WarehouseEnv, robot_id: int):
             return DistHuer(robot_id, on_board[(higher_pack+1)%2].position)
     
     if robot.package != None:
-        return DistHuer(robot_id, robot.package.destination) + robot.credit - other_robot.credit + robot.battery + pack_reward(robot.package)
-    return PackHuer(robot_id) + 2*robot.credit - other_robot.credit + robot.battery
+        return DistHuer(robot_id, robot.package.destination) + robot.credit - other_robot.credit + 1.1*robot.battery + pack_reward(robot.package)
+    return PackHuer(robot_id) + (1+1/env.num_steps)*robot.credit - other_robot.credit + 1.1*robot.battery
     
 
 class AgentGreedyImproved(AgentGreedy):
