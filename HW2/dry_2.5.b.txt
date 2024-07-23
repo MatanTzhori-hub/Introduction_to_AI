@@ -1,0 +1,17 @@
+function minimax(state, agent)
+	if G(state)
+		return U(state, agent)
+	turn = turn(state)
+	children = succ(state)
+	if turn = agent
+		currMax = -inf
+		for c in children
+			v = minimax(c, agent)
+			currMax = max(v, currMax)
+		return currMax
+	else:
+		currMin = inf
+		for c in children
+			v = minimax(c, agent)
+			currMin = min(v, currMin)
+		return currMin

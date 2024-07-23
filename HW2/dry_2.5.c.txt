@@ -1,0 +1,9 @@
+function minimax(state, agent)
+	if G(state)
+		return U(state, agent)
+	children = succ(state)
+	currMax = -inf
+	for c in children
+		v = minimax(c, agent)
+		currMax = max(v, currMax)
+	return currMax
