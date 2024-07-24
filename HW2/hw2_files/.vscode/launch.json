@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "args": ["greedy", "greedy", "-t", "0.5", "-s", "1234", "-c", "200", "--console_print", "--screen_print"]
+            "args": ["greedyImproved", "expectimax", "-t", "0.5", "-s", "1234", "-c", "200", "--console_print", "--screen_print"]
         }
     ]
 }

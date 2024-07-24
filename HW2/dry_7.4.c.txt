@@ -1,0 +1,27 @@
+function MSPI_anytime(partialState, Agent, D, time_limit):
+	K = 3
+	while not exceed time_limit:
+		a = MoneteCarloPartialInformation(partialState, Agent, D, K)
+		K++
+	
+	return a
+
+function MoneteCarloPartialInformation(PartialState, Agent, D ,K):
+	Actions = get all legal actions in ParialState
+	S_Complete = all states consistent with PartialState
+	Sample = Sample K random states from S_Complete
+	Loop for a in Actions:
+		Loop for s in Sample:
+			v(a) = v(a) + RB-AlphaBeta(a(s), Agent, D, Alpha=-inf, Beta=inf)
+		v(a) = v(a)/K
+	select a with maximal v(a)
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
