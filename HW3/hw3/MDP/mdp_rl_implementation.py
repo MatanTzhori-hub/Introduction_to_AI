@@ -3,6 +3,8 @@ from simulator import Simulator
 from typing import Dict, List, Tuple
 import numpy as np
 
+import copy
+
 def transitions_probabilities(mdp: MDP, from_state: np.ndarray, to_state: np.ndarray, action: str) -> np.ndarray:
     if from_state in mdp.terminal_states:
         return 0
@@ -54,9 +56,9 @@ def calc_util(mdp: MDP, state: np.ndarray, U: np.ndarray, action: str) -> float:
 
 def bellman_update(mdp: MDP, state: np.ndarray, U: np.ndarray) -> Tuple[float, str]:
     if state in mdp.terminal_states:
-        return U[state[0]][state[1]], 0
+        return U[state[0]][state[1]], None
     if mdp.board[state[0]][state[1]] == "WALL":
-        return None, "WALL"
+        return None, None
     
     max_util, a = max_utility_action(mdp, state, U)
     U_next = float(mdp.board[state[0]][state[1]]) + mdp.gamma * max_util
@@ -72,7 +74,7 @@ def value_iteration(mdp: MDP, U_init: np.ndarray, epsilon: float=10 ** (-3)) -> 
     
     # TODO:
     # ====== YOUR CODE: ======
-    U = U_init.copy()
+    U = copy.deepcopy(U_init)
     delta = np.inf
     
     while True:
@@ -94,7 +96,7 @@ def value_iteration(mdp: MDP, U_init: np.ndarray, epsilon: float=10 ** (-3)) -> 
         if delta < epsilon * (1 - mdp.gamma) / mdp.gamma:
             break
     
-    
+    U = np.array(U, dtype=object)
     # ========================
     return U
 
@@ -107,7 +109,7 @@ def get_policy(mdp: MDP, U: np.ndarray) -> np.ndarray:
     policy = None
     # TODO:
     # ====== YOUR CODE: ====== 
-    policy = np.empty_like(mdp.board, dtype='U5')
+    policy = np.empty_like(mdp.board, dtype=object)
     
     for row in range(mdp.num_row):
         for col in range(mdp.num_col):
@@ -124,8 +126,8 @@ def policy_evaluation(mdp: MDP, policy: np.ndarray) -> np.ndarray:
     #
     # TODO:
     # ====== YOUR CODE: ======
-    U = np.zeros_like(policy, dtype=float)
-    U[policy == "WALL"] = None
+    U = np.array(policy, dtype=object)
+    U[U == "WALL"] = None
     
     states = [(i, j) for i in range(mdp.num_row) for j in range(mdp.num_col) if mdp.board[i][j] != 'WALL']
     
@@ -136,7 +138,7 @@ def policy_evaluation(mdp: MDP, policy: np.ndarray) -> np.ndarray:
     
     for state, u in zip(states, utils):
         U[state[0]][state[1]] = u
-        
+    
     return U
     # ========================
 
@@ -151,7 +153,9 @@ def policy_iteration(mdp: MDP, policy_init: np.ndarray) -> np.ndarray:
     # TODO:
     # ====== YOUR CODE: ======
     unchanged = False
-    optimal_policy = policy_init.copy()
+    optimal_policy = np.array(policy_init, dtype=object)
+    optimal_policy[optimal_policy == "WALL"] = None
+    optimal_policy[optimal_policy == 0] = None
     
     while not unchanged:
         U = policy_evaluation(mdp, optimal_policy)
