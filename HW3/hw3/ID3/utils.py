@@ -15,7 +15,7 @@ from typing import List, Tuple
 ========================================================================
 """
 
-ID = 123456789  # TODO: change it to your personal ID
+ID = 208936989  # TODO: change it to your personal ID
 random_gen = RandomState(seed=ID)
 print_formatted_values = False
 
@@ -39,7 +39,7 @@ def accuracy(y: np.array, y_pred: np.array)-> float:
     assert y.ndim == 1
     accuracy_val = None
     # ====== YOUR CODE: ======
-    raise NotImplementedError
+    accuracy_val = np.sum(y == y_pred)/y.shape[0]
     # ========================
 
     return accuracy_val
@@ -61,7 +61,15 @@ def l2_dist(x1: np.array, x2: np.array):
     dists = None
 
     # ====== YOUR CODE: ======
-    raise NotImplementedError
+    # Simplifying L2 between a and b : instead of sqrt(sum((ai-b1)^2))
+    # We calculate: sqrt(sum(ai^2 + bi^2 -2*a*b^T))  
+    
+    x1_squared = np.sum(x1**2, axis=1).reshape(-1, 1)  # (N1, 1)
+    x2_squared = np.sum(x2**2, axis=1).reshape(1, -1)  # (1, N2)
+    dists_squared = x1_squared + x2_squared - 2 * np.dot(x1, x2.T)  # (N1, N2)
+    
+    dists_squared = np.maximum(dists_squared, 0)
+    dists = np.sqrt(dists_squared)
     # ========================
 
     return dists

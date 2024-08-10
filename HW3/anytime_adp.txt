@@ -1,0 +1,8 @@
+function ADP_Anytime(sim: Simulator, n_rows: int, n_cols: int, actions: List[Action], time_limit: float):
+	num_episodes = 10
+	
+	while not exceed time_limit:
+		rewards_matrix, transition_probs = adp_algorithm(sim, num_episodes, n_rows, n_cols, actions)
+		num_episodes += 1
+		
+	return rewards_matrix, transition_probs
