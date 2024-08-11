@@ -5,7 +5,17 @@ import numpy as np
 
 import copy
 
+
 def transitions_probabilities(mdp: MDP, from_state: np.ndarray, to_state: np.ndarray, action: str) -> np.ndarray:
+    """
+    Calculate the transition probability from one state to another given a certain action.
+    :param mdp: The given mdp.
+    :param from_state: The state we transition from, of shape (1, 2)
+    :param to_state: The state we transition to, of shape (1, 2)
+    :param action: The performed action.
+    :return: probability value
+    """
+    
     if from_state in mdp.terminal_states:
         return 0
     if np.abs(from_state[0] - to_state[0]) > 1:
@@ -13,7 +23,7 @@ def transitions_probabilities(mdp: MDP, from_state: np.ndarray, to_state: np.nda
     if np.abs(from_state[1] - to_state[1]) > 1:
         return 0
     
-    actions_idx_to_state = [i for i, action in enumerate(mdp.actions) if mdp.step(from_state, action) == to_state]
+    actions_idx_to_state = [i for i, act in enumerate(mdp.actions) if mdp.step(from_state, act) == to_state]
     
     probability = 0
     for i in actions_idx_to_state:
@@ -21,6 +31,14 @@ def transitions_probabilities(mdp: MDP, from_state: np.ndarray, to_state: np.nda
     return probability
 
 def max_utility_action(mdp: MDP, state: np.ndarray, U: np.ndarray) -> Tuple[float, str]:
+    """
+    Calculate the maximum utility of a given state, and the action that produce it.
+    :param mdp: The given mdp.
+    :param state: Current state, of shape (1, 2)
+    :param U: Utilities matrix.
+    :return: Max utility of all possible actions, and the coresponding action.
+    """
+    
     if state in mdp.terminal_states:
         return U[state[0]][state[1]], 0
     if mdp.board[state[0]][state[1]] == "WALL":
@@ -40,6 +58,15 @@ def max_utility_action(mdp: MDP, state: np.ndarray, U: np.ndarray) -> Tuple[floa
     return max, a.value
 
 def calc_util(mdp: MDP, state: np.ndarray, U: np.ndarray, action: str) -> float:
+    """
+    Calculate the utility of a given state and action.
+    :param mdp: The given mdp.
+    :param state: Current state, of shape (1, 2)
+    :param U: Utilities matrix.
+    :param action: Current action.
+    :return: Utility of the given state and action.
+    """
+    
     if state in mdp.terminal_states:
         return U[state[0]][state[1]]
     if mdp.board[state[0]][state[1]] == "WALL":
@@ -55,6 +82,14 @@ def calc_util(mdp: MDP, state: np.ndarray, U: np.ndarray, action: str) -> float:
     return U_out
 
 def bellman_update(mdp: MDP, state: np.ndarray, U: np.ndarray) -> Tuple[float, str]:
+    """
+    Calculate the bellman update of a given state.
+    :param mdp: The given mdp.
+    :param state: Current state, of shape (1, 2)
+    :param U: Utilities matrix.
+    :return: Bellman update step's utility and action.
+    """
+    
     if state in mdp.terminal_states:
         return U[state[0]][state[1]], None
     if mdp.board[state[0]][state[1]] == "WALL":
